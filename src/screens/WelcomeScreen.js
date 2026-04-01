@@ -14,6 +14,7 @@ export class WelcomeScreen {
     div.innerHTML = `
       <div class="logo-area">
         <span class="logo-symbol">✦</span>
+        <div class="soul-counter" id="soul-counter"></div>
       </div>
       <p class="intro-text">
         태어난 순간,<br/>
@@ -27,10 +28,20 @@ export class WelcomeScreen {
     return div;
   }
 
-  onEnter() {
+  async onEnter() {
     const btn = this.el.querySelector('#btn-start');
     btn.addEventListener('click', () => {
       this.router.navigateTo('qna');
     });
+
+    // Load counter
+    try {
+      const res = await fetch('/api/count');
+      const { count } = await res.json();
+      if (count > 0) {
+        const counterEl = this.el.querySelector('#soul-counter');
+        counterEl.textContent = `별과 만난 여행자 ✦ ${count.toLocaleString()}`;
+      }
+    } catch { /* silent */ }
   }
 }

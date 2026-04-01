@@ -62,10 +62,22 @@ export function generateProfile(nakshatraResult, birthYear) {
     // === Planet Info ===
     planet: planet ? {
       name: planet.nameKr,
+      modernName: planet.modernName,
       nameSanskrit: planet.nameSanskrit,
       symbol: planet.symbol,
+      nature: planet.nature,
       description: planet.description,
+      influence: planet.influence,
       qualities: planet.qualities,
+      element: planet.element,
+      rules: planet.rules,
+      day: planet.day,
+      color: planet.color,
+      gemstone: planet.gemstone,
+      body: planet.body,
+      mantra: planet.mantra,
+      mantraKr: planet.mantraKr,
+      mantraMeaning: planet.mantraMeaning,
     } : null,
 
     // === Rashi Detail ===

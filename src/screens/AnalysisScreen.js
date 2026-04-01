@@ -75,6 +75,9 @@ export class AnalysisScreen {
 
     await contemplationPause(2500);
 
+    // Increment analysis counter
+    fetch('/api/count', { method: 'POST' }).catch(() => {});
+
     // Navigate to profile
     this.router.navigateTo('profile', data);
   }

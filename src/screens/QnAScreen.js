@@ -1,6 +1,6 @@
 /**
  * Q&A Screen - Interactive birth data collection
- * Chat-like interface simulating conversation with an astrologer
+ * Chat-like interface with step-based back navigation
  */
 import { typewrite, contemplationPause } from '../utils/typewriter.js';
 import { searchCities, searchCitiesLocal } from '../engine/geocoding.js';
@@ -12,6 +12,7 @@ export class QnAScreen {
     this.el = null;
     this.container = null;
     this.selectedCity = null;
+    this._rejectInput = null; // for cancelling current input on back
   }
 
   render() {
@@ -23,69 +24,110 @@ export class QnAScreen {
 
   async onEnter() {
     this.container = this.el.querySelector('#qna-container');
+
+    // Override back button for in-step navigation
+    const backBtn = this.el.querySelector('.back-btn');
+    if (backBtn) {
+      const newBtn = backBtn.cloneNode(true);
+      backBtn.replaceWith(newBtn);
+      newBtn.addEventListener('click', () => {
+        if (this._rejectInput) {
+          this._rejectInput();
+        } else {
+          this.router.goBack();
+        }
+      });
+    }
+
     await this.runConversation();
   }
 
   async runConversation() {
-    // Step 1: Birth date
-    await this.addAstrologerBubble('당신이 태어난 날을 알려주세요.');
-    await contemplationPause(600);
-    await this.addConceptBubble(
-      '베딕 점성술에서는 태어난 순간의 하늘이 당신의 운명을 결정합니다. 이를 \'쿤달리(Kundali, 출생 차트)\'라 부릅니다.'
-    );
-    const birthDate = await this.askDate();
+    const stepMarkers = [];
+    let step = 0;
+    const answers = {};
 
-    this.starfield?.pulse();
-    await this.addUserBubble(formatDateKr(birthDate));
-    await contemplationPause(800);
+    while (step <= 4) {
+      stepMarkers[step] = this.container.children.length;
 
-    // Step 2: Birth time
-    await this.addAstrologerBubble('별들이 정렬하던 그 시각은 기억하시나요?');
-    await contemplationPause(600);
-    await this.addConceptBubble(
-      '정확한 출생 시각은 \'라그나(Lagna, 상승점)\'를 결정합니다. 같은 날 태어나도 시각에 따라 운명이 달라지는 이유예요.'
-    );
-    const birthTime = await this.askTime();
-
-    this.starfield?.pulse();
-    await this.addUserBubble(birthTime === '06:00' ? '정확히 모르겠어요' : formatTimeKr(birthTime));
-    await contemplationPause(800);
-
-    // Step 3: Birth place
-    await this.addAstrologerBubble('어느 하늘 아래 태어나셨나요?');
-    await contemplationPause(600);
-    await this.addConceptBubble(
-      '출생 장소에 따라 같은 시각이라도 하늘의 별 배치가 달라집니다. 베딕 점성술은 관측 위치를 중요하게 여겨요.'
-    );
-    const city = await this.askCity();
-
-    this.starfield?.pulse();
-    await this.addUserBubble(city.nameKr);
-    await contemplationPause(800);
-
-    // Step 4: Gender (optional)
-    await this.addAstrologerBubble('마지막으로, 성별을 알려주시겠어요?');
-    await contemplationPause(400);
-    await this.addConceptBubble(
-      '이름 추천에 참고됩니다. 건너뛰셔도 괜찮아요.'
-    );
-    const gender = await this.askGender();
-
-    this.starfield?.pulse();
-    await this.addUserBubble(gender === 'male' ? '남성' : gender === 'female' ? '여성' : '상관없음');
-    await contemplationPause(600);
-
-    // Transition message
-    await this.addAstrologerBubble('별의 기록을 읽어보겠습니다...');
-    await contemplationPause(1200);
-
-    // Navigate to analysis
-    this.router.navigateTo('analysis', {
-      birthDate,
-      birthTime,
-      city,
-      gender,
-    });
+      try {
+        switch (step) {
+          case 0: {
+            await this.addAstrologerBubble('당신이 태어난 날을 알려주세요.');
+            await contemplationPause(600);
+            await this.addConceptBubble(
+              '베딕 점성술에서는 태어난 순간의 하늘이 당신의 운명을 결정합니다. 이를 \'쿤달리(Kundali, 출생 차트)\'라 부릅니다.'
+            );
+            answers.birthDate = await this.askDate();
+            this.starfield?.pulse();
+            await this.addUserBubble(formatDateKr(answers.birthDate));
+            await contemplationPause(800);
+            break;
+          }
+          case 1: {
+            await this.addAstrologerBubble('별들이 정렬하던 그 시각은 기억하시나요?');
+            await contemplationPause(600);
+            await this.addConceptBubble(
+              '정확한 출생 시각은 \'라그나(Lagna, 상승점)\'를 결정합니다. 같은 날 태어나도 시각에 따라 운명이 달라지는 이유예요.'
+            );
+            answers.birthTime = await this.askTime();
+            this.starfield?.pulse();
+            await this.addUserBubble(answers.birthTime === '06:00' ? '정확히 모르겠어요' : formatTimeKr(answers.birthTime));
+            await contemplationPause(800);
+            break;
+          }
+          case 2: {
+            await this.addAstrologerBubble('어느 하늘 아래 태어나셨나요?');
+            await contemplationPause(600);
+            await this.addConceptBubble(
+              '출생 장소에 따라 같은 시각이라도 하늘의 별 배치가 달라집니다. 베딕 점성술은 관측 위치를 중요하게 여겨요.'
+            );
+            answers.city = await this.askCity();
+            this.starfield?.pulse();
+            await this.addUserBubble(answers.city.nameKr);
+            await contemplationPause(800);
+            break;
+          }
+          case 3: {
+            await this.addAstrologerBubble('마지막으로, 성별을 알려주시겠어요?');
+            await contemplationPause(400);
+            await this.addConceptBubble(
+              '이름 추천에 참고됩니다. 건너뛰셔도 괜찮아요.'
+            );
+            answers.gender = await this.askGender();
+            this.starfield?.pulse();
+            await this.addUserBubble(answers.gender === 'male' ? '남성' : answers.gender === 'female' ? '여성' : '상관없음');
+            await contemplationPause(600);
+            break;
+          }
+          case 4: {
+            await this.addAstrologerBubble('별의 기록을 읽어보겠습니다...');
+            await contemplationPause(1200);
+            this.router.navigateTo('analysis', {
+              birthDate: answers.birthDate,
+              birthTime: answers.birthTime,
+              city: answers.city,
+              gender: answers.gender,
+            });
+            return;
+          }
+        }
+        step++;
+      } catch (e) {
+        if (e === 'back') {
+          if (step > 0) {
+            step--;
+            // Remove everything from the previous step's start
+            while (this.container.children.length > stepMarkers[step]) {
+              this.container.lastChild.remove();
+            }
+          } else {
+            this.router.goBack();
+            return;
+          }
+        }
+      }
+    }
   }
 
   // === Bubble helpers ===
@@ -120,10 +162,10 @@ export class QnAScreen {
     this.container.scrollTop = this.container.scrollHeight;
   }
 
-  // === Input prompts ===
+  // === Input prompts (with back/cancel support) ===
 
   askDate() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const area = document.createElement('div');
       area.className = 'qna-input-area';
       area.innerHTML = `
@@ -134,12 +176,15 @@ export class QnAScreen {
       this.container.appendChild(area);
       this.scrollToBottom();
 
+      this._rejectInput = () => { this._rejectInput = null; area.remove(); reject('back'); };
+
       const input = area.querySelector('#birth-date');
       const btn = area.querySelector('#btn-date');
 
       const tryResolve = () => {
         const parsed = parseDateText(input.value);
         if (parsed) {
+          this._rejectInput = null;
           area.remove();
           resolve(parsed);
         } else {
@@ -154,7 +199,7 @@ export class QnAScreen {
   }
 
   askTime() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const area = document.createElement('div');
       area.className = 'qna-input-area';
       area.innerHTML = `
@@ -166,12 +211,15 @@ export class QnAScreen {
       this.container.appendChild(area);
       this.scrollToBottom();
 
+      this._rejectInput = () => { this._rejectInput = null; area.remove(); reject('back'); };
+
       const input = area.querySelector('#birth-time');
       const btn = area.querySelector('#btn-time');
 
       const tryResolve = () => {
         const parsed = parseTimeText(input.value);
         if (parsed) {
+          this._rejectInput = null;
           area.remove();
           resolve(parsed);
         } else {
@@ -184,6 +232,7 @@ export class QnAScreen {
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryResolve(); });
 
       area.querySelector('#btn-skip-time').addEventListener('click', () => {
+        this._rejectInput = null;
         area.remove();
         resolve('06:00');
       });
@@ -191,7 +240,7 @@ export class QnAScreen {
   }
 
   askCity() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const area = document.createElement('div');
       area.className = 'qna-input-area';
       area.style.position = 'relative';
@@ -202,6 +251,8 @@ export class QnAScreen {
       `;
       this.container.appendChild(area);
       this.scrollToBottom();
+
+      this._rejectInput = () => { this._rejectInput = null; area.remove(); reject('back'); };
 
       const input = area.querySelector('#city-input');
       const suggestions = area.querySelector('#city-suggestions');
@@ -242,6 +293,7 @@ export class QnAScreen {
 
       btnCity.addEventListener('click', () => {
         if (this.selectedCity) {
+          this._rejectInput = null;
           area.remove();
           resolve(this.selectedCity);
         }
@@ -266,7 +318,7 @@ export class QnAScreen {
   }
 
   askGender() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const area = document.createElement('div');
       area.className = 'qna-input-area';
       area.innerHTML = `
@@ -279,8 +331,11 @@ export class QnAScreen {
       this.container.appendChild(area);
       this.scrollToBottom();
 
+      this._rejectInput = () => { this._rejectInput = null; area.remove(); reject('back'); };
+
       area.querySelectorAll('[data-gender]').forEach(btn => {
         btn.addEventListener('click', () => {
+          this._rejectInput = null;
           area.remove();
           resolve(btn.dataset.gender);
         });
@@ -291,27 +346,19 @@ export class QnAScreen {
 
 // === Parsing helpers ===
 
-/**
- * Parse free-form date text into "YYYY-MM-DD"
- * Supports: 19900315, 1990.3.15, 1990/03/15, 1990-3-15, 1990년 3월 15일, etc.
- */
 function parseDateText(text) {
   if (!text) return null;
   const s = text.trim().replace(/\s+/g, '');
 
-  // Try: 8-digit (19900315)
   let m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
   if (m) return validateDate(m[1], m[2], m[3]);
 
-  // Try: delimited (1990.3.15, 1990/03/15, 1990-3-15)
   m = s.match(/^(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})$/);
   if (m) return validateDate(m[1], m[2], m[3]);
 
-  // Try: Korean style (1990년3월15일)
   m = s.match(/^(\d{4})년(\d{1,2})월(\d{1,2})일?$/);
   if (m) return validateDate(m[1], m[2], m[3]);
 
-  // Try: just 6 digits with implied 19xx (900315 → 1990-03-15)
   m = s.match(/^(\d{2})(\d{2})(\d{2})$/);
   if (m) {
     const yy = parseInt(m[1]);
@@ -329,27 +376,19 @@ function validateDate(y, m, d) {
   return `${year}-${pad(month)}-${pad(day)}`;
 }
 
-/**
- * Parse free-form time text into "HH:MM"
- * Supports: 14:30, 1430, 오후 2시 30분, 오전 8시, 새벽 3시, 밤 11시, etc.
- */
 function parseTimeText(text) {
   if (!text) return null;
   const s = text.trim();
 
-  // Try: HH:MM
   let m = s.match(/^(\d{1,2}):(\d{2})$/);
   if (m) return validateTime(parseInt(m[1]), parseInt(m[2]));
 
-  // Try: HHMM (4 digits)
   m = s.match(/^(\d{2})(\d{2})$/);
   if (m) return validateTime(parseInt(m[1]), parseInt(m[2]));
 
-  // Try: just hour (e.g., "14")
   m = s.match(/^(\d{1,2})$/);
   if (m) return validateTime(parseInt(m[1]), 0);
 
-  // Try: Korean - 오후/오전/새벽/밤/아침/저녁 + 숫자시 + 숫자분
   m = s.match(/(오전|오후|새벽|밤|아침|저녁|낮)?\s*(\d{1,2})\s*시\s*(\d{1,2})?\s*분?/);
   if (m) {
     let h = parseInt(m[2]);
@@ -361,7 +400,6 @@ function parseTimeText(text) {
     } else if (period === '오전' || period === '아침') {
       if (h === 12) h = 0;
     } else if (period === '새벽') {
-      // 새벽 is early morning (0-5), keep as is
       if (h === 12) h = 0;
     } else if (period === '낮') {
       if (h < 12 && h !== 12) h += 12;
@@ -377,8 +415,6 @@ function validateTime(h, m) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${pad(h)}:${pad(m)}`;
 }
-
-// === Formatting helpers ===
 
 function formatDateKr(dateStr) {
   const [y, m, d] = dateStr.split('-');

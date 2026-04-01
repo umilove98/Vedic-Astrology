@@ -24,18 +24,29 @@
       "target": [
         {
           "target": "dir",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "signAndEditExecutable": false
     }
   },
-  "keywords": ["vedic", "astrology", "naming", "nakshatra"],
+  "keywords": [
+    "vedic",
+    "astrology",
+    "naming",
+    "nakshatra"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "electron": "^41.1.0",
     "electron-builder": "^26.8.1",
     "vite": "^8.0.3"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0"
   }
 }
