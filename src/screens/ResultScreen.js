@@ -57,19 +57,6 @@ export class ResultScreen {
         </div>
       </div>
 
-      ${topNames.length > 0 ? `
-      <div style="margin:20px 0;text-align:center">
-        <div style="font-family:var(--font-serif);font-size:1.1rem;color:var(--text-primary);margin-bottom:12px">추천 이름</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-          ${topNames.map(n => `
-            <div style="padding:8px 18px;border:1px solid var(--border-glow);border-radius:20px;
-              background:rgba(201,168,76,0.06);color:var(--accent-gold-light);font-family:var(--font-serif);font-size:1.1rem">
-              ${n.name}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      ` : ''}
 
       <div style="max-width:500px;text-align:center;margin:16px 0">
         <div style="font-size:0.88rem;color:var(--text-secondary);line-height:1.9">
