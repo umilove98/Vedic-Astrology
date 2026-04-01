@@ -16,6 +16,7 @@ import { AnalysisScreen } from './screens/AnalysisScreen.js';
 import { ProfileScreen } from './screens/ProfileScreen.js';
 import { NamesScreen } from './screens/NamesScreen.js';
 import { ResultScreen } from './screens/ResultScreen.js';
+import { NakshatraListScreen } from './screens/NakshatraListScreen.js';
 import { calculateMoonPosition } from './engine/astronomy.js';
 import { getNakshatraFromDegree } from './engine/nakshatra.js';
 
@@ -38,6 +39,7 @@ function init() {
   router.register('profile', new ProfileScreen(router));
   router.register('names', new NamesScreen(router));
   router.register('result', new ResultScreen(router));
+  router.register('nakshatras', new NakshatraListScreen(router));
 
   // Check for shared result link
   const shared = parseShareHash();

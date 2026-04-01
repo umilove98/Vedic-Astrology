@@ -134,6 +134,30 @@ html, body {
   background: rgba(201, 168, 76, 0.08);
 }
 
+/* === 27 Nakshatras Button (top-right) === */
+.nk-list-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 10;
+  padding: 8px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  background: rgba(15, 15, 50, 0.6);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  backdrop-filter: blur(6px);
+}
+
+.nk-list-btn:hover {
+  border-color: var(--border-glow);
+  color: var(--accent-gold-light);
+  background: rgba(201, 168, 76, 0.08);
+}
+
 /* === Screen Container === */
 .screen {
   position: absolute;

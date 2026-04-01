@@ -80,6 +80,11 @@ export class Router {
         this._injectBackButton(el);
       }
 
+      // Add 27 nakshatras button (except welcome & nakshatras screens)
+      if (name !== 'welcome' && name !== 'nakshatras') {
+        this._injectNakshatraButton(el);
+      }
+
       void el.offsetHeight;
       el.classList.add('active');
 
@@ -97,6 +102,14 @@ export class Router {
     btn.className = 'back-btn';
     btn.innerHTML = '← ✦ 별자리를 되짚다';
     btn.addEventListener('click', () => this.goBack());
+    screenEl.prepend(btn);
+  }
+
+  _injectNakshatraButton(screenEl) {
+    const btn = document.createElement('button');
+    btn.className = 'nk-list-btn';
+    btn.textContent = '27 낙샤트라';
+    btn.addEventListener('click', () => this.navigateTo('nakshatras'));
     screenEl.prepend(btn);
   }
 
