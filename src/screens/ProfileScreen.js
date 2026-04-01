@@ -3,6 +3,7 @@
  * The main "사주풀이" screen with accordion sections
  */
 import { generateProfile, formatDashaTimeline } from '../engine/profileAnalyzer.js';
+import { NAKSHATRAS } from '../data/nakshatras.js';
 
 function gunaTooltip(guna) {
   const map = {
@@ -171,6 +172,16 @@ export class ProfileScreen {
         <div style="margin-top:14px">
           <p style="color:var(--accent-rose);font-size:0.82em;margin-bottom:4px">⚡ 관계에서의 과제</p>
           <p>${data.challenges}</p>
+        </div>` : ''}
+        ${data.compatible?.length ? `
+        <div style="margin-top:14px">
+          <p style="color:var(--accent-gold);font-size:0.82em;margin-bottom:8px">✦ 잘 맞는 낙샤트라</p>
+          <div class="keyword-list">${data.compatible.map(id => `<span class="keyword" style="background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3)">${NAKSHATRAS[id]?.nameKr || id}</span>`).join('')}</div>
+        </div>` : ''}
+        ${data.incompatible?.length ? `
+        <div style="margin-top:10px">
+          <p style="color:var(--accent-rose);font-size:0.82em;margin-bottom:8px">⚡ 주의가 필요한 낙샤트라</p>
+          <div class="keyword-list">${data.incompatible.map(id => `<span class="keyword" style="background:rgba(232,69,122,0.06);border-color:rgba(232,69,122,0.2);color:var(--accent-rose)">${NAKSHATRAS[id]?.nameKr || id}</span>`).join('')}</div>
         </div>` : ''}
         ${data.style ? `<p style="margin-top:14px;font-style:italic;color:var(--text-secondary)">${data.style}</p>` : ''}
       `;
